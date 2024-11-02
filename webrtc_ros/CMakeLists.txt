@@ -3,6 +3,7 @@ project(webrtc_ros)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(async_web_server_cpp REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(image_transport REQUIRED)
@@ -11,6 +12,8 @@ find_package(webrtc_ros_msgs REQUIRED)
 find_package(webrtc REQUIRED)
 find_package(X11 REQUIRED)
 find_package(jsoncpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(OpenCV REQUIRED COMPONENTS core highgui imgcodecs imgproc videoio)
 
 
 ###########
@@ -57,7 +60,6 @@ ament_target_dependencies(
     rclcpp
     std_msgs
     webrtc_ros_msgs
-    
 )
 
 target_link_libraries(${PROJECT_NAME}_server_node 
@@ -69,12 +71,40 @@ target_link_libraries(${PROJECT_NAME}_server_node
 
 set_target_properties(${PROJECT_NAME}_server_node PROPERTIES COMPILE_OPTIONS "-std=c++17")
 
+add_library(${PROJECT_NAME} SHARED
+  src/burger.cpp
+  src/webrtc_ros_client_node.cpp
+  src/cv_mat_sensor_msgs_image_type_adapter.cpp
+)
+
+target_compile_definitions(${PROJECT_NAME}
+  PRIVATE "IMAGE_TOOLS_BUILDING_DLL")
+target_include_directories(${PROJECT_NAME} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+target_link_libraries(${PROJECT_NAME}
+  rclcpp::rclcpp
+  ${sensor_msgs_TARGETS}
+  ${std_msgs_TARGETS}
+  rclcpp_components::component
+  ${OpenCV_LIBS})
+
+rclcpp_components_register_node(${PROJECT_NAME} PLUGIN "webrtc_ros::Cam2Image" EXECUTABLE cam2image)
+
 #############
 ## Install ##
 #############
 install(TARGETS
   ${PROJECT_NAME}_server_node
   DESTINATION lib/${PROJECT_NAME})
+
+install(
+  TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin)
+
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 # Install web files
 install(DIRECTORY web

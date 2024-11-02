@@ -2,6 +2,7 @@
 #define WEBRTC_ROS_WEBRTC_WEB_SERVER_H_
 
 #include <string>
+#include <rclcpp/rclcpp.hpp>
 
 namespace webrtc_ros {
 
