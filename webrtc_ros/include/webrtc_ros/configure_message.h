@@ -1,16 +1,13 @@
 #ifndef WEBRTC_ROS_CONFIGURE_MESSAGE_H_
 #define WEBRTC_ROS_CONFIGURE_MESSAGE_H_
 
-#include <webrtc_ros/webrtc_ros_message.h>
 #include <json/json.h>
 #include <webrtc/api/jsep.h>
+#include <webrtc_ros/webrtc_ros_message.h>
 
+namespace webrtc_ros {
 
-namespace webrtc_ros
-{
-
-struct ConfigureAction
-{
+struct ConfigureAction {
   bool fromJson(const Json::Value& action_json);
   void toJson(Json::Value* action_json) const;
 
@@ -27,9 +24,8 @@ struct ConfigureAction
   static std::string kExpectVideoTrackActionName;
 };
 
-class ConfigureMessage
-{
-public:
+class ConfigureMessage {
+ public:
   static std::string kActionsFieldName;
   static std::string kConfigureType;
 
@@ -43,6 +39,6 @@ public:
   std::vector<ConfigureAction> actions;
 };
 
-}
+}  // namespace webrtc_ros
 
 #endif

@@ -1,31 +1,31 @@
 #ifndef WEBRTC_ROS_WEBRTC_ROS_SERVER_H_
 #define WEBRTC_ROS_WEBRTC_ROS_SERVER_H_
 
-#include <rclcpp/rclcpp.hpp>
-#include <boost/shared_ptr.hpp>
 #include <webrtc_ros/webrtc_client.h>
 #include <webrtc_ros/webrtc_web_server.h>
+#include <boost/shared_ptr.hpp>
 #include <condition_variable>
+#include <rclcpp/rclcpp.hpp>
 
-namespace webrtc_ros
-{
+namespace webrtc_ros {
 
-MessageHandler* WebrtcRosServer_handle_new_signaling_channel(void* _this, SignalingChannel *channel);
+MessageHandler* WebrtcRosServer_handle_new_signaling_channel(
+    void* _this,
+    SignalingChannel* channel);
 
-class WebrtcRosServer
-{
-public:
+class WebrtcRosServer {
+ public:
   WebrtcRosServer(rclcpp::Node::SharedPtr nh);
   ~WebrtcRosServer();
   void run();
   void stop();
 
-  MessageHandler* handle_new_signaling_channel(SignalingChannel *channel);
-  void cleanupWebrtcClient(WebrtcClient *client);
+  MessageHandler* handle_new_signaling_channel(SignalingChannel* channel);
+  void cleanupWebrtcClient(WebrtcClient* client);
 
-  std::unique_ptr<rtc::Thread>signaling_thread_;
-private:
+  std::unique_ptr<rtc::Thread> signaling_thread_;
 
+ private:
   std::condition_variable shutdown_cv_;
   std::mutex clients_mutex_;
   std::map<WebrtcClient*, WebrtcClientWeakPtr> clients_;
@@ -37,6 +37,6 @@ private:
   boost::shared_ptr<webrtc_ros::WebrtcWebServer> server_;
 };
 
-}
+}  // namespace webrtc_ros
 
 #endif

@@ -1,17 +1,14 @@
 #ifndef WEBRTC_ROS_ICE_CANDIDATE_MESSAGE_H_
 #define WEBRTC_ROS_ICE_CANDIDATE_MESSAGE_H_
 
-#include <webrtc_ros/webrtc_ros_message.h>
 #include <json/json.h>
 #include <webrtc/api/jsep.h>
+#include <webrtc_ros/webrtc_ros_message.h>
 
+namespace webrtc_ros {
 
-namespace webrtc_ros
-{
-
-class IceCandidateMessage
-{
-public:
+class IceCandidateMessage {
+ public:
   static std::string kIceCandidateType;
   static std::string kSdpMidFieldName;
   static std::string kSdpMlineIndexFieldName;
@@ -30,9 +27,8 @@ public:
   std::string sdp_mid;
   int sdp_mline_index;
   std::string candidate;
-
 };
 
-}
+}  // namespace webrtc_ros
 
 #endif

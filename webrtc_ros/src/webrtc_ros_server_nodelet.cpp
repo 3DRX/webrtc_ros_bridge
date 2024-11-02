@@ -1,34 +1,28 @@
-#include <rclcpp/rclcpp.hpp>
 #include <webrtc_ros/webrtc_ros_server.h>
+#include <rclcpp/rclcpp.hpp>
 
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
 #include <boost/shared_ptr.hpp>
 
-namespace webrtc_ros
-{
-  class WebrtcRosServerNodelet : public nodelet::Nodelet
-{
-public:
-  ~WebrtcRosServerNodelet()
-  {
-    if(server_)
-    {
+namespace webrtc_ros {
+class WebrtcRosServerNodelet : public nodelet::Nodelet {
+ public:
+  ~WebrtcRosServerNodelet() {
+    if (server_) {
       server_->stop();
     }
   }
 
-  void onInit()
-  {
+  void onInit() {
     server_.reset(new WebrtcRosServer(getNodeHandle(), getPrivateNodeHandle()));
     server_->run();
   }
-private:
+
+ private:
   boost::shared_ptr<WebrtcRosServer> server_;
 };
 
-
-}
+}  // namespace webrtc_ros
 
 PLUGINLIB_EXPORT_CLASS(webrtc_ros::WebrtcRosServerNodelet, nodelet::Nodelet);
-

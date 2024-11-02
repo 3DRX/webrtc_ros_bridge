@@ -1,18 +1,18 @@
 #include "webrtc_ros/webrtc_ros_json_parser.h"
 
-namespace webrtc_ros
-{
+namespace webrtc_ros {
 
 bool WebrtcRosJsonParser::GetStringFromJsonObject(const Json::Value& in,
-                             const std::string& k,
-                             std::string* out) {
+                                                  const std::string& k,
+                                                  std::string* out) {
   Json::Value x;
-  return WebrtcRosJsonParser::GetValueFromJsonObject(in, k, &x) && WebrtcRosJsonParser::GetStringFromJson(x, out);
+  return WebrtcRosJsonParser::GetValueFromJsonObject(in, k, &x) &&
+         WebrtcRosJsonParser::GetStringFromJson(x, out);
 }
 
 bool WebrtcRosJsonParser::GetValueFromJsonObject(const Json::Value& in,
-                            const std::string& k,
-                            Json::Value* out) {
+                                                 const std::string& k,
+                                                 Json::Value* out) {
   if (!in.isObject() || !in.isMember(k)) {
     return false;
   }
@@ -21,7 +21,8 @@ bool WebrtcRosJsonParser::GetValueFromJsonObject(const Json::Value& in,
   return true;
 }
 
-bool WebrtcRosJsonParser::GetStringFromJson(const Json::Value& in, std::string* out) {
+bool WebrtcRosJsonParser::GetStringFromJson(const Json::Value& in,
+                                            std::string* out) {
   if (!in.isString()) {
     if (in.isBool()) {
       *out = WebrtcRosJsonParser::ToString(in.asBool());
@@ -41,10 +42,11 @@ bool WebrtcRosJsonParser::GetStringFromJson(const Json::Value& in, std::string* 
 }
 
 bool WebrtcRosJsonParser::GetIntFromJsonObject(const Json::Value& in,
-                          const std::string& k,
-                          int* out) {
+                                               const std::string& k,
+                                               int* out) {
   Json::Value x;
-  return WebrtcRosJsonParser::GetValueFromJsonObject(in, k, &x) && WebrtcRosJsonParser::GetIntFromJson(x, out);
+  return WebrtcRosJsonParser::GetValueFromJsonObject(in, k, &x) &&
+         WebrtcRosJsonParser::GetIntFromJson(x, out);
 }
 
 bool WebrtcRosJsonParser::GetIntFromJson(const Json::Value& in, int* out) {
@@ -60,13 +62,13 @@ bool WebrtcRosJsonParser::GetIntFromJson(const Json::Value& in, int* out) {
     char* end_ptr;
     errno = 0;
     val = strtol(c_str, &end_ptr, 10);  // NOLINT
-    ret = (end_ptr != c_str && *end_ptr == '\0' && !errno && val >= std::numeric_limits<int>::min() &&
+    ret = (end_ptr != c_str && *end_ptr == '\0' && !errno &&
+           val >= std::numeric_limits<int>::min() &&
            val <= std::numeric_limits<int>::max());
     *out = val;
   }
   return ret;
 }
-
 
 std::string WebrtcRosJsonParser::ToString(const bool b) {
   return b ? "true" : "false";
@@ -88,4 +90,4 @@ std::string WebrtcRosJsonParser::ToString(const double d) {
   return std::string(&buf[0], len);
 }
 
-}
+}  // namespace webrtc_ros
