@@ -5,6 +5,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(async_web_server_cpp REQUIRED)
+find_package(websocketpp REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -26,7 +27,7 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
   ${webrtc_ros_msgs_INCLUDE_DIRS}
   ${webrtc_INCLUDE_DIRS}
-  
+  ${websocketpp_INCLUDE_DIRS}
 )
 add_definitions(${webrtc_DEFINITIONS})
 
@@ -46,7 +47,17 @@ add_executable(${PROJECT_NAME}_server_node
   src/webrtc_ros_json_parser.cpp
 )
 
+add_executable(${PROJECT_NAME}_client_node
+  src/webrtc_ros_client_node.cpp
+)
+
 target_include_directories(${PROJECT_NAME}_server_node
+    PRIVATE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+target_include_directories(${PROJECT_NAME}_client_node
     PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
@@ -62,6 +73,16 @@ ament_target_dependencies(
     webrtc_ros_msgs
 )
 
+ament_target_dependencies(
+  ${PROJECT_NAME}_client_node
+    async_web_server_cpp
+    cv_bridge
+    image_transport
+    rclcpp
+    std_msgs
+    webrtc_ros_msgs
+)
+
 target_link_libraries(${PROJECT_NAME}_server_node 
   ${webrtc_LIBRARIES}
   webrtc
@@ -69,12 +90,20 @@ target_link_libraries(${PROJECT_NAME}_server_node
   ${X11_LIBRARIES}
 )
 
+target_link_libraries(${PROJECT_NAME}_client_node 
+  ${webrtc_LIBRARIES}
+  webrtc
+  jsoncpp_lib
+  ${X11_LIBRARIES}
+  ${websocketpp_LIBRARIES}
+)
+
 set_target_properties(${PROJECT_NAME}_server_node PROPERTIES COMPILE_OPTIONS "-std=c++17")
+set_target_properties(${PROJECT_NAME}_client_node PROPERTIES COMPILE_OPTIONS "-std=c++17")
 
 add_library(${PROJECT_NAME} SHARED
   src/burger.cpp
   src/cam2image.cpp
-  src/webrtc_ros_client_node.cpp
   src/cv_mat_sensor_msgs_image_type_adapter.cpp
 )
 
@@ -91,13 +120,16 @@ target_link_libraries(${PROJECT_NAME}
   ${OpenCV_LIBS})
 
 rclcpp_components_register_node(${PROJECT_NAME} PLUGIN "webrtc_ros::Cam2Image" EXECUTABLE cam2image)
-rclcpp_components_register_node(${PROJECT_NAME} PLUGIN "webrtc_ros::WebRTCNode" EXECUTABLE webrtc_ros_client_node)
 
 #############
 ## Install ##
 #############
 install(TARGETS
   ${PROJECT_NAME}_server_node
+  DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS
+  ${PROJECT_NAME}_client_node
   DESTINATION lib/${PROJECT_NAME})
 
 install(
