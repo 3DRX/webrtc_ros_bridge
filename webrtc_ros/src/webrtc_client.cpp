@@ -3,13 +3,11 @@
 #include <webrtc_ros/webrtc_client.h>
 #include <webrtc_ros/webrtc_ros_message.h>
 #include <rclcpp/rclcpp.hpp>
-//#include "talk/media/devices/devicemanager.h"
 #include <webrtc/api/video/video_source_interface.h>
 #include <webrtc/rtc_base/bind.h>
 #include <webrtc_ros/ros_video_capturer.h>
 #include <webrtc_ros_msgs/srv/get_ice_servers.hpp>
 
-#include <chrono>
 using namespace std::chrono_literals;
 
 namespace webrtc_ros {

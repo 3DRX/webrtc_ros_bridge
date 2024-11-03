@@ -73,6 +73,7 @@ set_target_properties(${PROJECT_NAME}_server_node PROPERTIES COMPILE_OPTIONS "-s
 
 add_library(${PROJECT_NAME} SHARED
   src/burger.cpp
+  src/cam2image.cpp
   src/webrtc_ros_client_node.cpp
   src/cv_mat_sensor_msgs_image_type_adapter.cpp
 )
@@ -90,6 +91,7 @@ target_link_libraries(${PROJECT_NAME}
   ${OpenCV_LIBS})
 
 rclcpp_components_register_node(${PROJECT_NAME} PLUGIN "webrtc_ros::Cam2Image" EXECUTABLE cam2image)
+rclcpp_components_register_node(${PROJECT_NAME} PLUGIN "webrtc_ros::WebRTCNode" EXECUTABLE webrtc_ros_client_node)
 
 #############
 ## Install ##
