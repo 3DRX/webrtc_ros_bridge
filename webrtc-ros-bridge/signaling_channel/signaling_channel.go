@@ -5,16 +5,22 @@ import (
 	"log/slog"
 	"net/url"
 	"strconv"
+	"sync"
 
 	"github.com/gorilla/websocket"
+	"github.com/pion/webrtc/v4"
 	"golang.org/x/exp/rand"
 )
 
 type SignalingChannel struct {
-	addr string
-	done chan struct{}
-	recv chan []byte
-	c    *websocket.Conn
+	addr                string
+	done                chan struct{}
+	recv                chan []byte
+	c                   *websocket.Conn
+	sdpChan             chan webrtc.SessionDescription
+	candidateChan       chan webrtc.ICECandidateInit
+	candidateToPeerChan chan *webrtc.ICECandidate
+	candidateMux        *sync.Mutex
 }
 
 type signalingResponse struct {
@@ -22,12 +28,22 @@ type signalingResponse struct {
 	Type string
 }
 
-func InitSignalingChannel(addr string) *SignalingChannel {
+func InitSignalingChannel(
+	addr *string,
+	sdpChan chan webrtc.SessionDescription,
+	candidateChan chan webrtc.ICECandidateInit,
+	candidateToPeerChan chan *webrtc.ICECandidate,
+	candidateMux *sync.Mutex,
+) *SignalingChannel {
 	return &SignalingChannel{
-		addr: addr,
-		done: make(chan struct{}),
-		recv: make(chan []byte),
-		c:    nil,
+		addr:                *addr,
+		done:                make(chan struct{}),
+		recv:                make(chan []byte),
+		c:                   nil,
+		sdpChan:             sdpChan,
+		candidateChan:       candidateChan,
+		candidateToPeerChan: candidateToPeerChan,
+		candidateMux:        candidateMux,
 	}
 }
 
@@ -80,7 +96,7 @@ func (s *SignalingChannel) Spin() {
 				slog.Error("recv error", "err", err)
 				return
 			}
-			slog.Info("recv success", "msg", message)
+			slog.Info("recv msg")
 			s.recv <- message
 		}
 	}()
@@ -93,18 +109,46 @@ func (s *SignalingChannel) Spin() {
 	}
 	c.WriteMessage(websocket.TextMessage, cfgMessage)
 	recvRaw := <-s.recv
-	resp := signalingResponse{}
-	err = json.Unmarshal(recvRaw, &resp)
+	sdp := webrtc.SessionDescription{}
+	err = json.Unmarshal(recvRaw, &sdp)
 	if err != nil {
 		slog.Error("unmarshal error", "error", err)
 		return
 	}
-	if resp.Type != "offer" {
-		slog.Error("unexpected response", "type", resp.Type)
-		return
+	s.sdpChan <- sdp
+	slog.Info("recv sdp", "sdp", sdp)
+	answer := <-s.sdpChan // await answer from peer connection
+	payload, err := json.Marshal(answer)
+	if err != nil {
+		slog.Error("marshal error", "error", err)
 	}
-	slog.Info("offer", "sdp", resp.Sdp)
+	c.WriteMessage(websocket.TextMessage, payload)
 	for {
+		select {
+		case candidateRaw := <-s.recv:
+			iceCandidate := webrtc.ICECandidateInit{
+				Candidate: string(candidateRaw),
+			}
+			s.candidateChan <- iceCandidate
+		case candidate := <-s.candidateToPeerChan:
+			if candidate == nil {
+				slog.Info("nil candidate")
+				continue
+			}
+			candidateJSON := candidate.ToJSON()
+			candidateMsg := map[string]interface{}{
+				"type":            "ice_candidate",
+				"candidate":       candidateJSON.Candidate,
+				"sdp_mid":         candidateJSON.SDPMid,
+				"sdp_mline_index": candidateJSON.SDPMLineIndex,
+			}
+			payload, err := toTextMessage(candidateMsg)
+			if err != nil {
+				slog.Error("marshal error", "error", err)
+			}
+			c.WriteMessage(websocket.TextMessage, payload)
+			slog.Info("send candidate", "candidate", candidate)
+		}
 	}
 }
 
