@@ -13,9 +13,6 @@ window.WebrtcRos = (function () {
     this.onConfigurationNeeded = undefined;
     this.signalingChannel = null;
     this.peerConnection = null;
-    this.peerConnectionMediaConstraints = {
-      optional: [{ DtlsSrtpKeyAgreement: true }],
-    };
     this.peerConnectionConfiguration = configuration;
 
     this.lastConfigureActionPromise = Promise.resolve([]);
@@ -43,12 +40,10 @@ window.WebrtcRos = (function () {
     this.signalingChannel.onclose = function () {
       console.log("WebRTC signaling connection closed");
     };
-    this.peerConnection = new RTCPeerConnection(
-      this.peerConnectionConfiguration,
-      this.peerConnectionMediaConstraints,
-    );
+    this.peerConnection = new RTCPeerConnection();
     this.peerConnection.onicecandidate = function (event) {
       if (event.candidate) {
+        console.log(`Candidate: ${JSON.stringify(event.candidate)}`)
         var candidate = {
           sdp_mline_index: event.candidate.sdpMLineIndex,
           sdp_mid: event.candidate.sdpMid,
